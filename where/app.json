@@ -2,6 +2,7 @@
   "expo": {
     "name": "Where",
     "slug": "where-community-location-insights",
+    "owner": "primearyan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -40,3 +41,4 @@
     }
   }
 }
+
