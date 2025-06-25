@@ -3,7 +3,7 @@
     "production": {
       "android": {
         "buildType": "apk",
-        "credentialsSource": "remote" // Expo manages your keystore
+        "credentialsSource": "remote"
       }
     }
   }
