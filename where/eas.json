@@ -1,16 +1,10 @@
-"build": {
+{
+  "build": {
     "production": {
-      "cli": {
-        "appVersionSource": "remote",
-        "versionCodeBehavior": "android"
-      },
       "android": {
-        "buildType": "apk"
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "credentialsSource": "remote"  // Let Expo manage credentials
       },
-      "cli": {
-        "appVersionSource": "local"
       "env": {
         "APP_ENV": "production"
       }
@@ -18,7 +12,8 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "credentialsSource": "remote"
       }
     },
     "development": {
@@ -29,11 +24,9 @@
       }
     }
   },
-  "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "./path/to/your/google-key.json",
-        "track": "production"
-      }
-    }
+  "cli": {
+    "version": ">= 5.0.0",
+    "requireCommit": true,
+    "appVersionSource": "remote"
   }
+}
