@@ -19,14 +19,14 @@
     "preview": {
       "android": {
         "buildType": "apk",
-        "credentialsSource": "remote" // Use Expo managed for preview builds
+        "credentialsSource": "remote"
       }
     }
   },
   "submit": {
     "production": {
       "android": {
-        "serviceAccountKeyPath": "path/to/google-play-key.json", // Optional for Play Store
+        "serviceAccountKeyPath": "path/to/google-play-key.json",
         "track": "internal"
       }
     }
