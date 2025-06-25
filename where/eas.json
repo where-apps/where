@@ -1,11 +1,37 @@
 {
   "build": {
     "production": {
+      "cli": {
+        "appVersionSource": "remote",
+        "versionCodeBehavior": "android"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "APP_ENV": "production"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "cli": {
-        "appVersionSource": "local"
+      }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "debug"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./path/to/your/google-key.json",
+        "track": "production"
       }
     }
   }
