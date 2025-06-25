@@ -1,34 +1,39 @@
-{
-  "build": {
+"build": {
     "production": {
-      "android": {
-        "credentialsSource": "local",
-        "keystore": {
-          "keystorePath": "android/your-keystore.jks",
-          "keystorePassword": "8d070851956db13bbd4d1a3e4235371c",
-          "keyAlias": "23e6580f52163ce8475669b45233179c",
-          "keyPassword": "c71ff6bd43aac7ba9672ab9cdcee2276"
-        },
-        "buildType": "apk"
-      },
       "cli": {
         "appVersionSource": "remote",
         "versionCodeBehavior": "android"
+      },
+      "android": {
+        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "cli": {
+        "appVersionSource": "local"
+      "env": {
+        "APP_ENV": "production"
       }
     },
     "preview": {
+      "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "local"
+        "buildType": "apk"
+      }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "debug"
       }
     }
   },
   "submit": {
     "production": {
       "android": {
-        "serviceAccountKeyPath": "path/to/google-play-key.json",
-        "track": "internal"
+        "serviceAccountKeyPath": "./path/to/your/google-key.json",
+        "track": "production"
       }
     }
   }
-}
