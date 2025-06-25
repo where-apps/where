@@ -2,10 +2,8 @@
   "build": {
     "production": {
       "android": {
-        "buildType": "apk"
-      },
-      "ios": {
-        "simulator": true
+        "buildType": "apk",
+        "credentialsSource": "remote" // Expo manages your keystore
       }
     }
   }
