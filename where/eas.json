@@ -4,7 +4,7 @@
       "android": {
         "credentialsSource": "local",
         "keystore": {
-          "keystorePath": "android/your-keystore.jks", // Path to your .jks file
+          "keystorePath": "android/your-keystore.jks",
           "keystorePassword": "8d070851956db13bbd4d1a3e4235371c",
           "keyAlias": "23e6580f52163ce8475669b45233179c",
           "keyPassword": "c71ff6bd43aac7ba9672ab9cdcee2276"
