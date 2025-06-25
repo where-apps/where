@@ -2,8 +2,10 @@
   "build": {
     "production": {
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "remote"
+        "buildType": "apk"
+      },
+      "cli": {
+        "appVersionSource": "local"
       }
     }
   }
