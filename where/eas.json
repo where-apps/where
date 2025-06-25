@@ -3,7 +3,8 @@
     "production": {
       "android": {
         "buildType": "apk",
-        "credentialsSource": "remote"
+        "credentialsSource": "remote",
+        "gradleCommand": ":app:assembleRelease"
       },
       "env": {
         "APP_ENV": "production"
@@ -12,15 +13,14 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "remote"
+        "buildType": "apk"
       }
     },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "debug"
+        "buildType": "apk"
       }
     }
   },
