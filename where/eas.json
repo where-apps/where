@@ -3,7 +3,7 @@
     "production": {
       "android": {
         "buildType": "apk",
-        "credentialsSource": "remote"  // Let Expo manage credentials
+        "credentialsSource": "remote"
       },
       "env": {
         "APP_ENV": "production"
