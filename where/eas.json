@@ -3,8 +3,7 @@
     "production": {
       "android": {
         "buildType": "apk",
-        "credentialsSource": "remote",
-        "gradleCommand": ":app:assembleRelease"
+        "credentialsSource": "remote"
       },
       "env": {
         "APP_ENV": "production"
