@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Text, SafeAreaView } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Text, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
-import MapView, { Marker } from 'react-native-maps';
 import { useLocationsStore } from '@/store/locations-store';
 import { useThemeStore } from '@/store/theme-store';
-import LocationMarker from '@/components/LocationMarker';
+import CrossPlatformMapView from '@/components/MapView';
 import { MapPin, AlertCircle } from 'lucide-react-native';
 
 export default function MapScreen() {
@@ -16,7 +15,7 @@ export default function MapScreen() {
   const { colors, isDarkMode } = useThemeStore();
   
   // Properly type the mapRef
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
     fetchLocations();
@@ -66,49 +65,46 @@ export default function MapScreen() {
     longitudeDelta: 0.05,
   };
 
+  // Add Leaflet CSS for web
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+      link.crossOrigin = '';
+      document.head.appendChild(link);
+      
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
       {errorMsg ? (
         <View style={styles.errorContainer}>
           <AlertCircle size={24} color={colors.danger} />
-          <Text style={styles.errorText}>{errorMsg}</Text>
+          <Text style={[styles.errorText, { color: colors.text }]}>{errorMsg}</Text>
         </View>
       ) : (
         <>
-          <MapView
-            ref={mapRef}
-            style={styles.map}
+          <CrossPlatformMapView
+            locations={locations}
+            userLocation={userLocation}
+            onMarkerPress={handleMarkerPress}
             initialRegion={initialRegion}
-            provider="google"
-            customMapStyle={isDarkMode ? darkMapStyle : []}
-          >
-            {locations.map(location => (
-              <Marker
-                key={location.id}
-                coordinate={{
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                }}
-                onPress={() => handleMarkerPress(location.id)}
-              >
-                <LocationMarker 
-                  location={location} 
-                  onPress={() => handleMarkerPress(location.id)} 
-                />
-              </Marker>
-            ))}
-            
-            {userLocation && (
-              <Marker
-                coordinate={userLocation}
-                pinColor={colors.primary}
-                title="You are here"
-              />
-            )}
-          </MapView>
+            isDarkMode={isDarkMode}
+            colors={colors}
+            mapRef={mapRef}
+          />
           
           {userLocation && (
-            <TouchableOpacity style={styles.locationButton} onPress={goToUserLocation}>
+            <TouchableOpacity 
+              style={[styles.locationButton, { backgroundColor: colors.card }]} 
+              onPress={goToUserLocation}
+            >
               <MapPin size={24} color={colors.primary} />
             </TouchableOpacity>
           )}
@@ -118,207 +114,17 @@ export default function MapScreen() {
   );
 }
 
-const darkMapStyle = [
-  {
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#212121"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [
-      {
-        "color": "#212121"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.country",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#9e9e9e"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.locality",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#bdbdbd"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#181818"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.stroke",
-    "stylers": [
-      {
-        "color": "#1b1b1b"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry.fill",
-    "stylers": [
-      {
-        "color": "#2c2c2c"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#8a8a8a"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#373737"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#3c3c3c"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway.controlled_access",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#4e4e4e"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#616161"
-      }
-    ]
-  },
-  {
-    "featureType": "transit",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#757575"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "color": "#000000"
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "color": "#3d3d3d"
-      }
-    ]
-  }
-];
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
   },
-  map: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
   locationButton: {
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: 'white',
     width: 50,
     height: 50,
     borderRadius: 25,
