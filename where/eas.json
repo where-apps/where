@@ -7,13 +7,16 @@
       },
       "env": {
         "APP_ENV": "production",
-        "BUN_INSTALL_ARGS": ""
+        "BUN_INSTALL_ARGS": "--no-save"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "BUN_INSTALL_ARGS": "--no-save"
       }
     },
     "development": {
@@ -21,6 +24,9 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "BUN_INSTALL_ARGS": "--no-save"
       }
     }
   },
