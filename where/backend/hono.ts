@@ -4,6 +4,9 @@ import { cors } from "hono/cors";
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 
+const S5_BASE_URL = process.env.S5_BASE_URL ?? "http://localhost:5050";
+const S5_ADMIN_API_KEY = process.env.S5_ADMIN_API_KEY ?? "5KgJ5a9iXvBSs66j8XZtkzUAqQazejytwi9bPtoJvaMF";
+
 // app will be mounted at /api
 const app = new Hono();
 
@@ -19,6 +22,39 @@ app.use(
     createContext,
   })
 );
+
+// Proxy S5 upload to avoid exposing admin key
+app.post("/s5/upload", async (c) => {
+  try {
+    if (!S5_ADMIN_API_KEY) {
+      c.status(500);
+      return c.json({ error: "S5 admin key not configured" });
+    }
+
+    const formData = await c.req.formData();
+
+    const res = await fetch(`${S5_BASE_URL}/s5/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${S5_ADMIN_API_KEY}`,
+      },
+      body: formData as unknown as BodyInit,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      c.status(res.status);
+      return c.json({ error: text || "S5 upload failed" });
+    }
+
+    const cid = (await res.text()).trim();
+    return c.json({ cid });
+  } catch (err) {
+    console.error("[S5 Upload Proxy] Error", err);
+    c.status(500);
+    return c.json({ error: "Unexpected error proxying upload" });
+  }
+});
 
 // Simple health check endpoint
 app.get("/", (c) => {
