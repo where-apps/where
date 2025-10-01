@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
 import { MapPin, Image as ImageIcon, X } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useLocationsStore } from '@/store/locations-store';
 import { useAuthStore } from '@/store/auth-store';
 import ImageCarousel from '@/components/ImageCarousel';
+import { uploadToS5 } from '@/lib/s5';
+
+// Only import on native platforms
+let ImagePicker: any = null;
+let Location: any = null;
+if (Platform.OS !== 'web') {
+  ImagePicker = require('expo-image-picker');
+  Location = require('expo-location');
+}
 
 export default function AddLocationScreen() {
   const router = useRouter();
@@ -17,15 +24,23 @@ export default function AddLocationScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState<boolean>(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
 
   useEffect(() => {
-    checkLocationPermission();
+    if (Platform.OS !== 'web') {
+      checkLocationPermission();
+    }
   }, []);
 
   const checkLocationPermission = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Error', 'Location services are not available on web');
+      return;
+    }
+    
     setLocationLoading(true);
     const { status } = await Location.requestForegroundPermissionsAsync();
     setLocationPermission(status === 'granted');
@@ -45,6 +60,11 @@ export default function AddLocationScreen() {
   };
 
   const pickImage = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Error', 'Image picker is not available on web');
+      return;
+    }
+    
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -53,7 +73,18 @@ export default function AddLocationScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImages([...images, result.assets[0].uri]);
+      const asset = result.assets[0];
+      try {
+        setUploading(true);
+        const fileType = asset.mimeType ?? 'image/jpeg';
+        const name = asset.fileName ?? `upload-${Date.now()}.jpg`;
+        const { gatewayUrl } = await uploadToS5({ uri: asset.uri, name, type: fileType });
+        setImages([...images, gatewayUrl]);
+      } catch (e: any) {
+        Alert.alert('Upload failed', e?.message ?? 'Unknown error');
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -178,12 +209,12 @@ export default function AddLocationScreen() {
         <TouchableOpacity 
           style={[
             styles.submitButton, 
-            (!name.trim() || images.length === 0 || !currentLocation || isLoading) && styles.submitButtonDisabled
+            (!name.trim() || images.length === 0 || !currentLocation || isLoading || uploading) && styles.submitButtonDisabled
           ]} 
           onPress={handleSubmit}
-          disabled={!name.trim() || images.length === 0 || !currentLocation || isLoading}
+          disabled={!name.trim() || images.length === 0 || !currentLocation || isLoading || uploading}
         >
-          {isLoading ? (
+          {isLoading || uploading ? (
             <ActivityIndicator size="small" color={colors.card} />
           ) : (
             <>
