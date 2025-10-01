@@ -87,7 +87,7 @@ export default function ProfileScreen() {
 
   const renderAuthenticatedContent = () => (
     <>
-      <View style={[styles.profileHeader, { backgroundColor: colors.card }]}>
+      <View style={[styles.profileHeader, { backgroundColor: colors.card }]} testID="profile-header">
         {user?.profileImage ? (
           <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
         ) : (
@@ -110,6 +110,9 @@ export default function ProfileScreen() {
 
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('account')}</Text>
+        <View style={{ marginBottom: 12 }}>
+          {React.createElement(require('./profile-avatar-upload').default)}
+        </View>
         <TouchableOpacity 
           style={[styles.menuItem, { borderBottomColor: colors.border }]}
           onPress={handleSettings}
@@ -189,7 +192,7 @@ export default function ProfileScreen() {
 
   const renderGuestContent = () => (
     <>
-      <View style={[styles.profileHeader, { backgroundColor: colors.card }]}>
+      <View style={[styles.profileHeader, { backgroundColor: colors.card }]} testID="profile-header">
         <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
           <Text style={[styles.avatarText, { color: colors.card }]}>G</Text>
         </View>
