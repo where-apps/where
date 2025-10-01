@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useLocationsStore } from '@/store/locations-store';
 import { useThemeStore } from '@/store/theme-store';
-import CrossPlatformMapView from '@/components/MapView';
+import MapView from '@/components/MapView';
 import { MapPin, AlertCircle } from 'lucide-react-native';
 
 export default function MapScreen() {
@@ -90,7 +90,7 @@ export default function MapScreen() {
         </View>
       ) : (
         <>
-          <CrossPlatformMapView
+          <MapView
             locations={locations}
             userLocation={userLocation}
             onMarkerPress={handleMarkerPress}
