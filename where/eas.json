@@ -6,7 +6,8 @@
         "credentialsSource": "remote"
       },
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "BUN_INSTALL_ARGS": ""
       }
     },
     "preview": {
