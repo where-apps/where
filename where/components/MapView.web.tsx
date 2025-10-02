@@ -23,6 +23,7 @@ export default function WebMapView({ locations, userLocation, onMarkerPress, ini
   const markersRef = useRef<any[]>([]);
   const tileLayerRef = useRef<any>(null);
   const LRef = useRef<any>(null);
+  const mapId = useMemo(() => `leaflet-map-${Math.random().toString(36).slice(2)}`, []);
 
   const center = useMemo(() => [initialRegion.latitude, initialRegion.longitude] as [number, number], [initialRegion.latitude, initialRegion.longitude]);
 
@@ -40,6 +41,12 @@ export default function WebMapView({ locations, userLocation, onMarkerPress, ini
         if (!containerRef.current) return;
 
         if (!mapRef.current) {
+          try {
+            const anyContainer = containerRef.current as unknown as { _leaflet_id?: number } | null;
+            if (anyContainer && (anyContainer as any)._leaflet_id) {
+              (anyContainer as any)._leaflet_id = undefined;
+            }
+          } catch {}
           mapRef.current = L.map(containerRef.current).setView(center, 13);
         }
 
@@ -165,6 +172,7 @@ export default function WebMapView({ locations, userLocation, onMarkerPress, ini
           tileLayerRef.current = null;
         }
         if (mapRef.current) {
+          try { mapRef.current.off(); } catch {}
           mapRef.current.remove();
           mapRef.current = null;
         }
@@ -177,6 +185,7 @@ export default function WebMapView({ locations, userLocation, onMarkerPress, ini
   return (
     <div
       ref={containerRef}
+      id={mapId}
       data-testid="leaflet-map"
       style={{ width: '100%', height: '100%', zIndex: 1 }}
     />
