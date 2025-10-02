@@ -1,448 +1,78 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image, Switch, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LogOut, LogIn, UserPlus, Settings, Info, Shield, MapPin, Award, Zap, Moon, Sun, Users, Globe } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform, Image } from 'react-native';
 import { useAuthStore } from '@/store/auth-store';
-import { useThemeStore } from '@/store/theme-store';
-import { useReferralStore } from '@/store/referral-store';
-import { useTranslation } from 'react-i18next';
+import { uploadToS5, retryFailedUploads } from '@/lib/s5';
+import { Image as ImageIcon } from 'lucide-react-native';
 
-export default function ProfileScreen() {
-  const router = useRouter();
-  const { user, isAuthenticated, isAnonymous, logout, loginWithGoogle, loginWithFarcaster } = useAuthStore();
-  const { theme, setTheme, colors, isDarkMode } = useThemeStore();
-  const { getReferralCount } = useReferralStore();
-  const { t, i18n } = useTranslation();
-  
-  const referralCount = user ? getReferralCount(user.id) : 0;
+let ImagePicker: any = null;
+if (Platform.OS !== 'web') {
+  ImagePicker = require('expo-image-picker');
+}
 
-  const handleLogin = () => {
-    router.push('/auth/login');
-  };
+export default function ProfileAvatarUpload() {
+  const { user, users, isAuthenticated } = useAuthStore();
+  const setUser = useAuthStore((s) => s);
+  const [uploading, setUploading] = useState<boolean>(false);
 
-  const handleSignup = () => {
-    router.push('/auth/signup');
-  };
+  useEffect(() => {
+    retryFailedUploads().catch(() => {});
+  }, []);
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to login with Google');
+  const pickAvatar = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Not available', 'Avatar upload is available on mobile only for now.');
+      return;
     }
-  };
-  
-  const handleFarcasterLogin = async () => {
-    try {
-      if (Platform.OS === 'web') {
-        await loginWithFarcaster();
-      } else {
-        Alert.alert('Not Available', 'Farcaster login is only available on web');
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      try {
+        setUploading(true);
+        const asset = result.assets[0];
+        const type = asset.mimeType ?? 'image/jpeg';
+        const name = asset.fileName ?? `avatar-${Date.now()}.jpg`;
+        const { gatewayUrl } = await uploadToS5({ uri: asset.uri, name, type });
+
+        useAuthStore.setState((state) => ({
+          user: state.user ? { ...state.user, profileImage: gatewayUrl } : state.user,
+          users: state.user ? state.users.map((u) => (u.id === state.user!.id ? { ...u, profileImage: gatewayUrl } : u)) : state.users,
+        }));
+      } catch (e: any) {
+        Alert.alert('Upload failed', e?.message ?? 'Unknown error');
+      } finally {
+        setUploading(false);
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to login with Farcaster');
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      t('logout'),
-      t('logout_confirmation'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        { 
-          text: t('logout'), 
-          style: 'destructive',
-          onPress: () => {
-            logout();
-          }
-        },
-      ]
-    );
-  };
-  
-  const handleReferrals = () => {
-    router.push('/referral');
-  };
-  
-  const handleMyLocations = () => {
-    router.push('/my-locations');
-  };
-  
-  const handleSettings = () => {
-    router.push('/settings');
-  };
-  
-  const toggleTheme = () => {
-    setTheme(isDarkMode ? 'light' : 'dark');
-  };
-  
-  const changeLanguage = () => {
-    const currentLang = i18n.language;
-    const languages = ['en', 'es', 'fr', 'de', 'zh'];
-    const currentIndex = languages.indexOf(currentLang);
-    const nextIndex = (currentIndex + 1) % languages.length;
-    i18n.changeLanguage(languages[nextIndex]);
-  };
-
-  const renderAuthenticatedContent = () => (
-    <>
-      <View style={[styles.profileHeader, { backgroundColor: colors.card }]} testID="profile-header">
-        {user?.profileImage ? (
-          <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
-        ) : (
-          <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.avatarText, { color: colors.card }]}>{user?.username?.[0]?.toUpperCase() || 'U'}</Text>
-          </View>
-        )}
-        <Text style={[styles.username, { color: colors.text }]}>{user?.username || 'User'}</Text>
-        <Text style={[styles.userType, { color: colors.textSecondary }]}>
-          {user?.authProvider === 'email' ? t('email_user') : 
-           user?.authProvider === 'google' ? t('google_user') : 
-           user?.authProvider === 'farcaster' ? t('farcaster_user') : t('registered_user')}
-        </Text>
-        
-        <View style={[styles.pointsContainer, { backgroundColor: colors.card }]}>
-          <Zap size={20} color={colors.secondary} />
-          <Text style={[styles.pointsText, { color: colors.text }]}>{user?.points?.toFixed(1) || '0'} {t('points')}</Text>
-        </View>
-      </View>
-
-      <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('account')}</Text>
-        <View style={{ marginBottom: 12 }}>
-          {React.createElement(require('./profile-avatar-upload').default)}
-        </View>
-        <TouchableOpacity 
-          style={[styles.menuItem, { borderBottomColor: colors.border }]}
-          onPress={handleSettings}
-        >
-          <Settings size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('settings')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.menuItem, { borderBottomColor: colors.border }]}
-          onPress={handleMyLocations}
-        >
-          <MapPin size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('my_locations')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-          <Award size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('my_points')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.menuItem, { borderBottomColor: colors.border }]}
-          onPress={handleReferrals}
-        >
-          <Users size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('referrals')}</Text>
-          {referralCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.badgeText, { color: colors.card }]}>{referralCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-          <Shield size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('privacy')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-          <Info size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('about')}</Text>
-        </TouchableOpacity>
-        <View style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-          {isDarkMode ? (
-            <Moon size={20} color={colors.text} />
-          ) : (
-            <Sun size={20} color={colors.text} />
-          )}
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('dark_mode')}</Text>
-          <Switch
-            value={isDarkMode}
-            onValueChange={toggleTheme}
-            trackColor={{ false: colors.inactive, true: colors.primary }}
-            thumbColor={colors.card}
-          />
-        </View>
-        <TouchableOpacity 
-          style={[styles.menuItem, { borderBottomColor: colors.border }]}
-          onPress={changeLanguage}
-        >
-          <Globe size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('language')}</Text>
-          <Text style={[styles.languageText, { color: colors.primary }]}>
-            {i18n.language === 'en' ? 'English' : 
-             i18n.language === 'es' ? 'Español' : 
-             i18n.language === 'fr' ? 'Français' : 
-             i18n.language === 'de' ? 'Deutsch' : '中文'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity 
-        style={[styles.logoutButton, { backgroundColor: colors.card, borderColor: colors.danger }]} 
-        onPress={handleLogout}
-      >
-        <LogOut size={20} color={colors.danger} />
-        <Text style={[styles.logoutText, { color: colors.danger }]}>{t('logout')}</Text>
-      </TouchableOpacity>
-    </>
-  );
-
-  const renderGuestContent = () => (
-    <>
-      <View style={[styles.profileHeader, { backgroundColor: colors.card }]} testID="profile-header">
-        <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.avatarText, { color: colors.card }]}>G</Text>
-        </View>
-        <Text style={[styles.username, { color: colors.text }]}>{t('guest_user')}</Text>
-        <Text style={[styles.userType, { color: colors.textSecondary }]}>{t('anonymous')}</Text>
-        
-        {user?.points && user.points > 0 && (
-          <View style={[styles.pointsContainer, { backgroundColor: colors.card }]}>
-            <Zap size={20} color={colors.secondary} />
-            <Text style={[styles.pointsText, { color: colors.text }]}>{user.points.toFixed(1)} {t('points')}</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('settings')}</Text>
-        <View style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-          {isDarkMode ? (
-            <Moon size={20} color={colors.text} />
-          ) : (
-            <Sun size={20} color={colors.text} />
-          )}
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('dark_mode')}</Text>
-          <Switch
-            value={isDarkMode}
-            onValueChange={toggleTheme}
-            trackColor={{ false: colors.inactive, true: colors.primary }}
-            thumbColor={colors.card}
-          />
-        </View>
-        <TouchableOpacity 
-          style={[styles.menuItem, { borderBottomColor: colors.border }]}
-          onPress={changeLanguage}
-        >
-          <Globe size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('language')}</Text>
-          <Text style={[styles.languageText, { color: colors.primary }]}>
-            {i18n.language === 'en' ? 'English' : 
-             i18n.language === 'es' ? 'Español' : 
-             i18n.language === 'fr' ? 'Français' : 
-             i18n.language === 'de' ? 'Deutsch' : '中文'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-          <Info size={20} color={colors.text} />
-          <Text style={[styles.menuText, { color: colors.text }]}>{t('about')}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.authButtons}>
-        <TouchableOpacity 
-          style={[styles.loginButton, { backgroundColor: colors.primary }]} 
-          onPress={handleLogin}
-        >
-          <LogIn size={20} color={colors.card} />
-          <Text style={[styles.loginText, { color: colors.card }]}>{t('login')}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.signupButton, { backgroundColor: colors.card, borderColor: colors.primary }]} 
-          onPress={handleSignup}
-        >
-          <UserPlus size={20} color={colors.primary} />
-          <Text style={[styles.signupText, { color: colors.primary }]}>{t('sign_up')}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.googleButton} 
-          onPress={handleGoogleLogin}
-        >
-          <Text style={styles.googleText}>{t('sign_in_with_google')}</Text>
-        </TouchableOpacity>
-        
-        {Platform.OS === 'web' && (
-          <TouchableOpacity 
-            style={[styles.farcasterButton, { backgroundColor: '#9B4DFF' }]} 
-            onPress={handleFarcasterLogin}
-          >
-            <Text style={styles.farcasterText}>{t('sign_in_with_farcaster')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </>
-  );
+  if (!user) return null;
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]} 
-      contentContainerStyle={styles.contentContainer}
-    >
-      {isAuthenticated ? renderAuthenticatedContent() : renderGuestContent()}
-    </ScrollView>
+    <View style={styles.container}>
+      {user.profileImage ? (
+        <Image source={{ uri: user.profileImage }} style={styles.avatar} />
+      ) : (
+        <View style={styles.placeholder}>
+          <ImageIcon size={28} color="#888" />
+        </View>
+      )}
+      <TouchableOpacity style={styles.button} onPress={pickAvatar} disabled={uploading}>
+        {uploading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Change Avatar</Text>}
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginVertical: 24,
-    borderRadius: 12,
-    padding: 20,
-  },
-  profileAvatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 16,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  username: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  userType: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 12,
-  },
-  pointsText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 6,
-  },
-  section: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  menuText: {
-    fontSize: 16,
-    marginLeft: 12,
-    flex: 1,
-  },
-  languageText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 20,
-    alignItems: 'center',
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  authButtons: {
-    gap: 12,
-  },
-  loginButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    padding: 16,
-  },
-  loginText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  signupButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-  },
-  signupText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  googleButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4285F4',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-    width: '100%',
-  },
-  googleText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  farcasterButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-    width: '100%',
-  },
-  farcasterText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
+  container: { alignItems: 'center', gap: 12 },
+  button: { backgroundColor: '#111', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
+  btnText: { color: '#fff', fontWeight: '600' },
+  avatar: { width: 96, height: 96, borderRadius: 48 },
+  placeholder: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' },
 });
