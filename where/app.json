@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.where"
+      "package": "com.where.whereapp"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -46,3 +46,4 @@
     }
   }
 }
+
