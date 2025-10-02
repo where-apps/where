@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Location, Rating, Comment, Contributor } from '@/types';
-import { mockLocations } from '@/mocks/locations';
 import { useAuthStore } from './auth-store';
 import { usePointsStore } from './points-store';
 
@@ -35,9 +34,7 @@ export const useLocationsStore = create<LocationsState>()(
       fetchLocations: async () => {
         set({ isLoading: true, error: null });
         try {
-          // In a real app, this would be an API call
-          // For now, we'll use mock data
-          set({ locations: mockLocations, isLoading: false });
+          set({ locations: [], isLoading: false });
         } catch (error) {
           set({ error: 'Failed to fetch locations', isLoading: false });
         }
