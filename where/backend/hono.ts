@@ -5,7 +5,9 @@ import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 
 const S5_BASE_URL = process.env.S5_BASE_URL ?? "http://localhost:5050";
-const S5_ADMIN_API_KEY = process.env.S5_ADMIN_API_KEY ?? "5KgJ5a9iXvBSs66j8XZtkzUAqQazejytwi9bPtoJvaMF";
+const S5_ADMIN_API_KEY =
+  process.env.S5_ADMIN_API_KEY ??
+  "5KgJ5a9iXvBSs66j8XZtkzUAqQazejytwi9bPtoJvaMF";
 
 // app will be mounted at /api
 const app = new Hono();
@@ -62,3 +64,9 @@ app.get("/", (c) => {
 });
 
 export default app;
+
+if (import.meta.main) {
+  const port = Number(process.env.PORT) || 3000;
+  console.log(`Server running on http://localhost:${port}`);
+  Bun.serve({ fetch: app.fetch, port });
+}
