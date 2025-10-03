@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProcedure } from "@/backend/trpc/create-context";
+import { publicProcedure } from "../../create-context";
 
 export default publicProcedure
   .input(z.object({ name: z.string() }))
@@ -9,3 +9,4 @@ export default publicProcedure
       date: new Date(),
     };
   });
+
