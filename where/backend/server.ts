@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 
-const S5_BASE_URL = process.env.S5_BASE_URL ?? "http://localhost:5050";
+const S5_BASE_URL = process.env.S5_BASE_URL ?? "http://where-app.com";
 const S5_ADMIN_API_KEY =
   process.env.S5_ADMIN_API_KEY ??
   "5KgJ5a9iXvBSs66j8XZtkzUAqQazejytwi9bPtoJvaMF";
@@ -59,5 +59,6 @@ app.get("/", (c) => {
 });
 
 export default app;
+
 
 
