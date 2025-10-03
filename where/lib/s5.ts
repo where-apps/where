@@ -27,7 +27,7 @@ const API_BASE = (() => {
   return 'https://where-1.onrender.com/api';
 })();
 
-const S5_BASE = process.env.EXPO_PUBLIC_S5_BASE_URL ?? 'http://localhost:5050';
+const S5_BASE = process.env.EXPO_PUBLIC_S5_BASE_URL ?? 'https://where-app.com';
 
 const RETRY_QUEUE_KEY = 's5_retry_queue_v1';
 const RETRY_QUEUE_LIMIT = 20;
