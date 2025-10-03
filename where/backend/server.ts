@@ -9,13 +9,10 @@ const S5_ADMIN_API_KEY =
   process.env.S5_ADMIN_API_KEY ??
   "5KgJ5a9iXvBSs66j8XZtkzUAqQazejytwi9bPtoJvaMF";
 
-// app will be mounted at /api
 const app = new Hono();
 
-// Enable CORS for all routes
 app.use("*", cors());
 
-// Mount tRPC router at /trpc
 app.use(
   "/trpc/*",
   trpcServer({
@@ -25,7 +22,6 @@ app.use(
   })
 );
 
-// Proxy S5 upload to avoid exposing admin key
 app.post("/s5/upload", async (c) => {
   try {
     if (!S5_ADMIN_API_KEY) {
@@ -58,15 +54,10 @@ app.post("/s5/upload", async (c) => {
   }
 });
 
-// Simple health check endpoint
 app.get("/", (c) => {
   return c.json({ status: "ok", message: "API is running" });
 });
 
 export default app;
 
-if (import.meta.main) {
-  const port = Number(process.env.PORT) || 3000;
-  console.log(`Server running on http://localhost:${port}`);
-  Bun.serve({ fetch: app.fetch, port });
-}
+
