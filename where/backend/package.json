@@ -1,0 +1,10 @@
+{
+  "name": "where-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "bun run hono.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.10"
+  }
+}
