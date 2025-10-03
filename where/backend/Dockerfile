@@ -2,12 +2,9 @@ FROM oven/bun:latest
 
 WORKDIR /app
 
-COPY backend/package.json backend/bun.lock* ./
-
+COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
-COPY backend/ ./
+COPY . .
 
-EXPOSE 10000
-
-CMD ["bun", "run", "start"]
+CMD ["bun", "run", "hono.ts"]
