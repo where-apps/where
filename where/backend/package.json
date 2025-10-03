@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun run hono.ts",
-    "start": "bun run hono.ts"
+    "dev": "bun run server.ts",
+    "start": "bun run server.ts"
   },
   "dependencies": {
     "hono": "^4.7.10",
