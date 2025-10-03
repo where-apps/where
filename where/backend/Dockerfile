@@ -1,15 +1,17 @@
-# Use Bun official image
 FROM oven/bun:latest
 
 WORKDIR /app
 
-COPY backend/package.json backend/bun.lockb ./
+COPY package.json ./
 
-RUN bun install --frozen-lockfile
+COPY bun.lockb* ./ 
 
-COPY backend ./
+RUN bun install --frozen-lockfile || bun install
+
+COPY . .
+
+RUN bun build hono.ts --outdir dist || true
 
 EXPOSE 3000
 
-CMD ["bun", "run", "hono.ts"]
-
+# Start
