@@ -10,4 +10,5 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["bun", "run", "server.ts"]
+CMD ["bun", "serve", "server.ts"]
+
