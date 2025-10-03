@@ -24,7 +24,7 @@ const API_BASE = (() => {
   if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
     return `${process.env.EXPO_PUBLIC_RORK_API_BASE_URL}/api`;
   }
-  throw new Error('No API base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL');
+  return 'https://where-1.onrender.com/api';
 })();
 
 const S5_BASE = process.env.EXPO_PUBLIC_S5_BASE_URL ?? 'http://localhost:5050';
