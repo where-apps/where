@@ -7,7 +7,7 @@ import { createContext } from "./trpc/create-context";
 const S5_BASE_URL = process.env.S5_BASE_URL ?? "http://where-app.com";
 const S5_ADMIN_API_KEY =
   process.env.S5_ADMIN_API_KEY ??
-  "6g4wEnRFrwmUNJj1uc32vLj8HAmVWaaY5ArYABRnNoj8";
+  "HvFNPSxB8h4dRPLM7bti9NnqzJfqboj9G792bLBmGzLR";
 
 const app = new Hono();
 
@@ -59,6 +59,7 @@ app.get("/", (c) => {
 });
 
 export default app;
+
 
 
 
