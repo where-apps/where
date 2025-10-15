@@ -9,7 +9,9 @@ Where utilizes Sia decentralized storage network via S5 for storage
 
 ## Setup
 #### 1. clone the repository:
+```
 git clone https://github.com/where-apps/where.git
+```
 
 #### 2. Run renterd:
 follow instructions in the doc to run zen testnet https://docs.sia.tech/zen-testnet
@@ -20,9 +22,14 @@ You can replace my S5_ADMIN_API_KEY and S5_BASE_URL with yours after setting up 
 ## Build
 #### - Log in to expo
 #### - Generate credentials for Android and IOS:
-in your projects root folder, run: eas credentials
+in your projects root folder, run: 
+```
+eas credentials
+```
 #### - You can build directly from expo.dev or in your terminal, run:
+```
 eas build --platform all (or specify)
+```
 
 ## Auth
 #### - Utilzed SupaBase to handle user auth data:
