@@ -8,7 +8,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -16,14 +16,26 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.where"
+      "bundleIdentifier": "app.rork.where",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show nearby places and add new locations.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images for locations.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos of locations."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.where.whereapp"
+      "package": "com.where.whereapp",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -39,6 +51,12 @@
         {
           "origin": "https://rork.com/"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Where to use your location to show nearby places and add new locations."
+        }
       ]
     ],
     "experiments": {
@@ -46,4 +64,3 @@
     }
   }
 }
-
