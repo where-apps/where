@@ -27,7 +27,8 @@ Fixed several issues that were causing the Android APK to crash immediately afte
 4. **Package Updates** - Updated all Expo packages to SDK 53 compatible versions:
    - expo: ~53.0.23
    - expo-router: ~5.1.7
-   - react-native: 0.79.5
+   - react-native: 0.79.6 (updated from 0.79.5 to match Expo SDK 53 requirement)
+   - Removed `@expo/config-plugins` from devDependencies (should only come from expo package)
    - All other expo-* packages updated to match SDK 53 requirements
 
 5. **Stability Improvements**:
