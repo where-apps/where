@@ -20,6 +20,12 @@ export type S5UploadResult = {
   gatewayUrl: string;
 };
 
+export type S5JsonUploadResult<T = any> = {
+  cid: string;
+  gatewayUrl: string;
+  data: T;
+};
+
 const API_BASE = (() => {
   if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
     return `${process.env.EXPO_PUBLIC_RORK_API_BASE_URL}/api`;
@@ -42,9 +48,61 @@ export function s5GatewayUrl(cid: string): string {
   return `${S5_BASE}/s5/gateway/${cid}`;
 }
 
+export async function uploadJsonToS5<T = any>(data: T, filename?: string): Promise<S5JsonUploadResult<T>> {
+  console.log('[s5] JSON upload start', { filename });
+
+  const jsonString = JSON.stringify(data);
+  const jsonBlob = new Blob([jsonString], { type: 'application/json' });
+  
+  const form = new FormData();
+  form.append('file', jsonBlob, filename || `data-${Date.now()}.json`);
+
+  let res: Response | null = null;
+  try {
+    res = await fetch(`${API_BASE}/s5/upload`, {
+      method: 'POST',
+      body: form,
+    });
+  } catch (e) {
+    console.log('[s5] JSON upload network error', e);
+    throw new Error('Network error uploading JSON to S5');
+  }
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => 'Upload failed');
+    console.log('[s5] JSON upload server error', res.status, txt);
+    throw new Error(txt);
+  }
+
+  const json = (await res.json()) as { cid?: string };
+  if (!json?.cid) {
+    throw new Error('No CID returned from S5');
+  }
+
+  const gatewayUrl = s5GatewayUrl(json.cid);
+  console.log('[s5] JSON upload success', { cid: json.cid, gatewayUrl });
+  return { cid: json.cid, gatewayUrl, data };
+}
+
+export async function fetchJsonFromS5<T = any>(cid: string): Promise<T> {
+  console.log('[s5] JSON fetch start', { cid });
+  
+  const url = s5GatewayUrl(cid);
+  const res = await fetch(url);
+  
+  if (!res.ok) {
+    console.error('[s5] JSON fetch error', res.status);
+    throw new Error('Failed to fetch JSON from S5');
+  }
+  
+  const data = await res.json();
+  console.log('[s5] JSON fetch success', { cid });
+  return data as T;
+}
+
 export async function uploadToS5(file: { uri: string; name: string; type: AllowedMime }): Promise<S5UploadResult> {
   const { uri, name, type } = file;
-  console.log('[s5] upload start', { uri, name, type });
+  console.log('[s5] file upload start', { uri, name, type });
 
   if (!type || typeof type !== 'string') {
     throw new Error('Invalid file type');
@@ -131,3 +189,4 @@ async function getFileSize(uri: string): Promise<number | null> {
     return null;
   }
 }
+
