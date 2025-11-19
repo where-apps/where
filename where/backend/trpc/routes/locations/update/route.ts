@@ -4,14 +4,14 @@ import { publicProcedure } from "@/backend/trpc/create-context";
 const S5_BASE_URL = process.env.S5_BASE_URL ?? "https://where-app.com";
 const S5_ADMIN_API_KEY = process.env.S5_ADMIN_API_KEY ?? "HvFNPSxB8h4dRPLM7bti9NnqzJfqboj9G792bLBmGzLR";
 
+const updateLocationInput = z.object({
+  cid: z.string(),
+  location: z.any(),
+});
+
 export default publicProcedure
-  .input(
-    z.object({
-      cid: z.string(),
-      location: z.any(),
-    })
-  )
-  .mutation(async ({ input }) => {
+  .input(updateLocationInput)
+  .mutation(async ({ input }: { input: z.infer<typeof updateLocationInput> }) => {
     const jsonBlob = new Blob([JSON.stringify(input.location)], {
       type: "application/json",
     });
