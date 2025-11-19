@@ -4,20 +4,20 @@ import { publicProcedure } from "@/backend/trpc/create-context";
 const S5_BASE_URL = process.env.S5_BASE_URL ?? "https://where-app.com";
 const S5_ADMIN_API_KEY = process.env.S5_ADMIN_API_KEY ?? "HvFNPSxB8h4dRPLM7bti9NnqzJfqboj9G792bLBmGzLR";
 
+const createLocationInput = z.object({
+  name: z.string(),
+  description: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  images: z.array(z.string()),
+  createdBy: z.string(),
+  isAnonymous: z.boolean(),
+  username: z.string().nullable(),
+});
+
 export default publicProcedure
-  .input(
-    z.object({
-      name: z.string(),
-      description: z.string(),
-      latitude: z.number(),
-      longitude: z.number(),
-      images: z.array(z.string()),
-      createdBy: z.string(),
-      isAnonymous: z.boolean(),
-      username: z.string().nullable(),
-    })
-  )
-  .mutation(async ({ input }) => {
+  .input(createLocationInput)
+  .mutation(async ({ input }: { input: z.infer<typeof createLocationInput> }) => {
     const location = {
       id: `loc_${Date.now()}`,
       name: input.name,
