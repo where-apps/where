@@ -4,21 +4,21 @@ import { publicProcedure } from "@/backend/trpc/create-context";
 const S5_BASE_URL = process.env.S5_BASE_URL ?? "https://where-app.com";
 const S5_ADMIN_API_KEY = process.env.S5_ADMIN_API_KEY ?? "HvFNPSxB8h4dRPLM7bti9NnqzJfqboj9G792bLBmGzLR";
 
+const addCommentInput = z.object({
+  comment: z.object({
+    id: z.string(),
+    userId: z.string(),
+    username: z.string().nullable(),
+    isAnonymous: z.boolean(),
+    text: z.string(),
+    createdAt: z.number(),
+  }),
+  locationId: z.string(),
+});
+
 export default publicProcedure
-  .input(
-    z.object({
-      comment: z.object({
-        id: z.string(),
-        userId: z.string(),
-        username: z.string().nullable(),
-        isAnonymous: z.boolean(),
-        text: z.string(),
-        createdAt: z.number(),
-      }),
-      locationId: z.string(),
-    })
-  )
-  .mutation(async ({ input }) => {
+  .input(addCommentInput)
+  .mutation(async ({ input }: { input: z.infer<typeof addCommentInput> }) => {
     const jsonBlob = new Blob([JSON.stringify(input.comment)], {
       type: "application/json",
     });
